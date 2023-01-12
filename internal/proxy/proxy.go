@@ -20,6 +20,7 @@ func New(upstreamHost string) *ReverseProxy {
 			// Request should go to correct host
 			r.URL.Host = upstreamHost
 			r.URL.Scheme = "https"
+			r.Host = upstreamHost
 
 			// TODO: get token from context and pass through if we need this functionality
 			//accessToken, ok := mv.AccessTokenFrom(r.Context())
