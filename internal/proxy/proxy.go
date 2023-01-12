@@ -16,7 +16,7 @@ func New(upstreamHost string) *ReverseProxy {
 	rp := &httputil.ReverseProxy{
 		Director: func(r *http.Request) {
 			// Instruct http.ReverseProxy to not modify X-Forwarded-For header
-			r.Header["X-Forwarded-For"] = nil
+			// r.Header["X-Forwarded-For"] = nil
 			// Request should go to correct host
 			r.URL.Host = upstreamHost
 			r.URL.Scheme = "https"
