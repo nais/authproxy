@@ -23,6 +23,8 @@ func init() {
 	flag.StringVar(&cfg.LogLevel, "log-level", cfg.LogLevel, "which log level to output")
 	flag.StringVar(&cfg.UpstreamHost, "upstream-host", cfg.UpstreamHost, "Upstream host")
 	flag.StringVar(&cfg.AuthProvider, "auth-provider", cfg.AuthProvider, "Auth provider")
+	flag.StringVar(&cfg.AuthIssuer, "auth-issuer", cfg.AuthIssuer, "Auth issuer")
+	flag.StringVar(&cfg.AuthAudience, "auth-audience", cfg.AuthAudience, "Auth audience")
 }
 
 func main() {
@@ -42,7 +44,10 @@ func main() {
 	}
 
 	r.HandleFunc("/isalive", func(writer http.ResponseWriter, _ *http.Request) {
-		fmt.Fprintf(writer, "ok\n")
+		_, err = fmt.Fprintf(writer, "ok\n")
+		if err != nil {
+			log.Error(err)
+		}
 	})
 	r.Handle("/*", auth(rp.Handle()))
 
