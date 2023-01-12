@@ -29,6 +29,8 @@ func (c *Config) Auth() (auth.Provider, error) {
 	switch p {
 	case "iap":
 		return auth.VerifyIAP(c.AuthAudience), nil
+	case "no-op":
+		return auth.NoOp(), nil
 	default:
 		return nil, errors.New("unknown auth provider")
 	}

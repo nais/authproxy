@@ -9,6 +9,12 @@ import (
 
 type Provider func(h http.Handler) http.Handler
 
+func NoOp() Provider {
+	return func(h http.Handler) http.Handler {
+		return h
+	}
+}
+
 func VerifyIAP(aud string) Provider {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
