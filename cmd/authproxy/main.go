@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"net/http"
 	"os"
 	"strings"
 
@@ -39,6 +40,9 @@ func main() {
 		log.Fatal(err)
 	}
 
+	r.HandleFunc("/isalive", func(writer http.ResponseWriter, request *http.Request) {
+		_, _ = writer.Write([]byte("ok"))
+	})
 	r.Handle("/*", auth(rp.Handle()))
 
 	if err := server.Start(cfg.BindAddress, r); err != nil {
