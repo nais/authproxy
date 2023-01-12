@@ -8,12 +8,14 @@ import (
 )
 
 type Config struct {
-	BindAddress  string `json:"bind-address"`
-	LogLevel     string `json:"log-level"`
-	UpstreamHost string `json:"upstream-host"`
-	AuthProvider string `json:"auth-provider"`
-	AuthAudience string `json:"auth-audience"`
-	AuthIssuer   string `json:"auth-issuer"`
+	BindAddress      string `json:"bind-address"`
+	LogLevel         string `json:"log-level"`
+	UpstreamHost     string `json:"upstream-host"`
+	AuthProvider     string `json:"auth-provider"`
+	AuthAudience     string `json:"auth-audience"`
+	AuthIssuer       string `json:"auth-issuer"`
+	AuthTokenHeader  string `json:"auth-token-header"`
+	AuthPreSharedKey string `json:"auth-pre-shared-key"`
 }
 
 func DefaultConfig() *Config {
@@ -28,10 +30,12 @@ func (c *Config) Auth() (auth.Provider, error) {
 
 	switch p {
 	case "iap":
-		return auth.VerifyIAP(c.AuthAudience), nil
+		return auth.IAP(c.AuthAudience), nil
+	case "key":
+		return auth.PreSharedKey(c.AuthTokenHeader, c.AuthPreSharedKey), nil
 	case "no-op":
 		return auth.NoOp(), nil
 	default:
-		return nil, errors.New("unknown auth provider")
+		return nil, errors.New("unknown auth-provider:" + p)
 	}
 }

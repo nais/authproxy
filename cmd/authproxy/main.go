@@ -25,6 +25,8 @@ func init() {
 	flag.StringVar(&cfg.AuthProvider, "auth-provider", cfg.AuthProvider, "Auth provider")
 	flag.StringVar(&cfg.AuthIssuer, "auth-issuer", cfg.AuthIssuer, "Auth issuer")
 	flag.StringVar(&cfg.AuthAudience, "auth-audience", cfg.AuthAudience, "Auth audience")
+	flag.StringVar(&cfg.AuthTokenHeader, "auth-token-header", cfg.AuthTokenHeader, "Auth token header")
+	flag.StringVar(&cfg.AuthPreSharedKey, "auth-pre-shared-key", cfg.AuthPreSharedKey, "Auth pre shared key")
 }
 
 func main() {
