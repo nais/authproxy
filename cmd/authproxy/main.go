@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -40,8 +41,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r.HandleFunc("/isalive", func(writer http.ResponseWriter, request *http.Request) {
-		_, _ = writer.Write([]byte("ok"))
+	r.HandleFunc("/isalive", func(writer http.ResponseWriter, _ *http.Request) {
+		fmt.Fprintf(writer, "ok\n")
 	})
 	r.Handle("/*", auth(rp.Handle()))
 
