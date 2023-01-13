@@ -27,13 +27,14 @@ func init() {
 	flag.StringVar(&cfg.AuthAudience, "auth-audience", cfg.AuthAudience, "Auth audience")
 	flag.StringVar(&cfg.AuthTokenHeader, "auth-token-header", cfg.AuthTokenHeader, "Auth token header")
 	flag.StringVar(&cfg.AuthPreSharedKey, "auth-pre-shared-key", cfg.AuthPreSharedKey, "Auth pre shared key")
+	flag.StringVar(&cfg.UpstreamScheme, "upstream-scheme", cfg.UpstreamScheme, "Upstream scheme")
 }
 
 func main() {
 	parseFlags()
 	setupLogger()
 
-	rp := proxy.New(cfg.UpstreamHost)
+	rp := proxy.New(cfg.UpstreamScheme, cfg.UpstreamHost)
 
 	r := chi.NewRouter()
 	logger := proxy.LogEntry()

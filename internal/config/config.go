@@ -11,6 +11,7 @@ type Config struct {
 	BindAddress      string `json:"bind-address"`
 	LogLevel         string `json:"log-level"`
 	UpstreamHost     string `json:"upstream-host"`
+	UpstreamScheme   string `json:"upstream-scheme"`
 	AuthProvider     string `json:"auth-provider"`
 	AuthAudience     string `json:"auth-audience"`
 	AuthIssuer       string `json:"auth-issuer"`
@@ -20,8 +21,9 @@ type Config struct {
 
 func DefaultConfig() *Config {
 	return &Config{
-		BindAddress: ":8080",
-		LogLevel:    "info",
+		BindAddress:    ":8080",
+		LogLevel:       "info",
+		UpstreamScheme: "https",
 	}
 }
 
@@ -30,8 +32,14 @@ func (c *Config) Auth() (auth.Provider, error) {
 
 	switch p {
 	case "iap":
+		if c.AuthAudience == "" {
+			return nil, errors.New("auth-audience must be set")
+		}
 		return auth.IAP(c.AuthAudience), nil
 	case "key":
+		if c.AuthPreSharedKey == "" {
+			return nil, errors.New("auth-pre-shared-key must be set")
+		}
 		return auth.PreSharedKey(c.AuthTokenHeader, c.AuthPreSharedKey), nil
 	case "no-op":
 		return auth.NoOp(), nil
