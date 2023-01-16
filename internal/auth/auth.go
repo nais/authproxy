@@ -57,9 +57,9 @@ func PreSharedKey(authHeader, apiKey string) Provider {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			header := r.Header.Get(authHeader)
-			h := strings.TrimSpace(strings.ToLower(r.Header.Get(authHeader)))
 
-			token := strings.ReplaceAll(h, "bearer ", "")
+			token := strings.ReplaceAll(header, "Bearer ", "")
+			token = strings.TrimSpace(token)
 			if token != strings.TrimSpace(apiKey) {
 				log.Debugf("header '%s' has invalid key '%s'", authHeader, header)
 				http.Error(w, "invalid token", http.StatusUnauthorized)
