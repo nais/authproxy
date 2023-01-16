@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -20,6 +21,7 @@ var cfg = config.DefaultConfig()
 
 func init() {
 	flag.StringVar(&cfg.BindAddress, "bind-address", cfg.BindAddress, "Bind address")
+	flag.StringVar(&cfg.MetricsBindAddress, "metrics-bind-address", cfg.MetricsBindAddress, "Metrics bind address")
 	flag.StringVar(&cfg.LogLevel, "log-level", cfg.LogLevel, "which log level to output")
 	flag.StringVar(&cfg.UpstreamHost, "upstream-host", cfg.UpstreamHost, "Upstream host")
 	flag.StringVar(&cfg.AuthProvider, "auth-provider", cfg.AuthProvider, "Auth provider")
@@ -54,15 +56,27 @@ func main() {
 	})
 	r.Handle("/*", auth(rp.Handle()))
 
+	go func() {
+		err := handleMetrics(cfg.MetricsBindAddress)
+		if err != nil {
+			log.Fatalf("fatal: metrics server error: %s", err)
+		}
+	}()
+
 	if err := server.Start(cfg.BindAddress, r); err != nil {
 		log.Fatal(err)
 	}
 }
 
+func handleMetrics(address string) error {
+	handler := promhttp.Handler()
+	return http.ListenAndServe(address, handler)
+}
+
 func parseFlags() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Infof("loading .env file %v", err)
+		log.Debugf("loading .env file %v", err)
 	}
 
 	flag.VisitAll(func(f *flag.Flag) {

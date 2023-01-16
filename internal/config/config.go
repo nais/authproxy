@@ -8,22 +8,24 @@ import (
 )
 
 type Config struct {
-	BindAddress      string `json:"bind-address"`
-	LogLevel         string `json:"log-level"`
-	UpstreamHost     string `json:"upstream-host"`
-	UpstreamScheme   string `json:"upstream-scheme"`
-	AuthProvider     string `json:"auth-provider"`
-	AuthAudience     string `json:"auth-audience"`
-	AuthIssuer       string `json:"auth-issuer"`
-	AuthTokenHeader  string `json:"auth-token-header"`
-	AuthPreSharedKey string `json:"auth-pre-shared-key"`
+	BindAddress        string `json:"bind-address"`
+	MetricsBindAddress string `json:"metrics-bind-address"`
+	LogLevel           string `json:"log-level"`
+	UpstreamHost       string `json:"upstream-host"`
+	UpstreamScheme     string `json:"upstream-scheme"`
+	AuthProvider       string `json:"auth-provider"`
+	AuthAudience       string `json:"auth-audience"`
+	AuthIssuer         string `json:"auth-issuer"`
+	AuthTokenHeader    string `json:"auth-token-header"`
+	AuthPreSharedKey   string `json:"auth-pre-shared-key"`
 }
 
 func DefaultConfig() *Config {
 	return &Config{
-		BindAddress:    ":8080",
-		LogLevel:       "info",
-		UpstreamScheme: "https",
+		BindAddress:        ":8080",
+		MetricsBindAddress: ":8081",
+		LogLevel:           "info",
+		UpstreamScheme:     "https",
 	}
 }
 
