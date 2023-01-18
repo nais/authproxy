@@ -1,70 +1,143 @@
 package auth
 
 import (
+	"context"
 	"net/http"
-	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/api/idtoken"
+	"google.golang.org/api/option"
 )
 
-func TestPreSharedKey(t *testing.T) {
+type TestProvider struct {
+	Handler
+}
 
-	provider := PreSharedKey("Authorization", "AbC123%")
-
-	reqWithBearer, err := req("Authorization", "Bearer AbC123%")
+func TestIAPAuthorized(t *testing.T) {
+	jwks, err := newJwkSet("1234")
 	assert.NoError(t, err)
 
-	rr := recordAndServe(reqWithBearer, provider(handler()))
-
-	assert.Equal(t, http.StatusOK, rr.Code)
-
-	reqWithoutBearer, err := req("Authorization", "AbC123%")
+	validator, err := idtoken.NewValidator(context.Background(), option.WithHTTPClient(httpClient(jwks)))
+	assert.NoError(t, err)
+	provider, err := testProvider(IAP("google_iap_audience").WithValidator(validator))
 	assert.NoError(t, err)
 
-	rr = recordAndServe(reqWithoutBearer, provider(handler()))
+	t1, err := defaultIapToken("google_iap_audience").sign(jwks)
+	r1, err := provider.withRequest("X-Goog-IAP-JWT-Assertion", t1)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, r1.Code)
+}
 
-	assert.Equal(t, http.StatusOK, rr.Code)
+func TestIAPUnauthorized(t *testing.T) {
+
+	validAudience := "google_iap_audience"
+	jwks, err := newJwkSet("1234")
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name       string
+		tokenFunc  func(t *testing.T) string
+		headerName string
+	}{
+		{
+			name:      "missing token",
+			tokenFunc: func(t *testing.T) string { return "" },
+		},
+		{
+			name: "sig does not match",
+			tokenFunc: func(t *testing.T) string {
+				jwks, err := newJwkSet("1234")
+				assert.NoError(t, err)
+
+				token, err := defaultIapToken(validAudience).sign(jwks)
+				assert.NoError(t, err)
+				return token
+			},
+		},
+		{
+			name: "token expired",
+			tokenFunc: func(t *testing.T) string {
+				iat := time.Now().Add(-20 * time.Second)
+				token, err := iapToken(iat, 19*time.Second, validAudience).sign(jwks)
+				assert.NoError(t, err)
+				return token
+			},
+		},
+		{
+			name: "token is in the future",
+			tokenFunc: func(t *testing.T) string {
+				iat := time.Now().Add(40 * time.Second)
+				token, err := iapToken(iat, 1*time.Minute, validAudience).sign(jwks)
+				assert.NoError(t, err)
+				return token
+			},
+		},
+		{
+			name: "invalid audience",
+			tokenFunc: func(t *testing.T) string {
+				token, err := defaultIapToken("invalid_audience").sign(jwks)
+				assert.NoError(t, err)
+				return token
+			},
+		},
+		{
+			name: "invalid issuer",
+			tokenFunc: func(t *testing.T) string {
+				token, err := defaultIapToken(validAudience).with("iss", "invalid").sign(jwks)
+				assert.NoError(t, err)
+				return token
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			validator, err := idtoken.NewValidator(context.Background(), option.WithHTTPClient(httpClient(jwks)))
+			assert.NoError(t, err)
+			provider, err := testProvider(IAP(validAudience).WithValidator(validator))
+			assert.NoError(t, err)
+
+			t1 := tt.tokenFunc(t)
+			header := tt.headerName
+			if header == "" {
+				header = "X-Goog-IAP-JWT-Assertion"
+			}
+			r1, err := provider.withRequest(header, t1)
+			assert.NoError(t, err)
+			assert.Equal(t, http.StatusUnauthorized, r1.Code)
+			println(r1.Body.String())
+		})
+	}
+}
+
+func TestPreSharedKeyAuthorized(t *testing.T) {
+	provider, err := testProvider(PreSharedKey("Authorization", "FooBar123_%"))
+
+	// correct header name and value
+	assert.NoError(t, err)
+	r1, err := provider.withRequest("Authorization", "FooBar123_%")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, r1.Code)
+
+	// correct header name and value, allow prefix with "Bearer "
+	r2, err := provider.withRequest("Authorization", "Bearer FooBar123_%")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, r2.Code)
 }
 
 func TestPreSharedKeyUnauthorized(t *testing.T) {
+	provider, err := testProvider(PreSharedKey("Authorization", "FooBar123_%"))
 
-	provider := PreSharedKey("Authorization", "Bearer 123")
-
-	reqWrongHeader, err := req("Not-Authorization", "Bearer 123")
+	// wrong header name
 	assert.NoError(t, err)
-
-	rr := recordAndServe(reqWrongHeader, provider(handler()))
-
-	assert.Equal(t, http.StatusUnauthorized, rr.Code)
-
-	reqInvalidHeaderValue, err := req("Authorization", "Bearer invalid")
+	r1, err := provider.withRequest("Not-Authorization", "FooBar123_%")
 	assert.NoError(t, err)
+	assert.Equal(t, http.StatusUnauthorized, r1.Code)
 
-	rr = recordAndServe(reqInvalidHeaderValue, provider(handler()))
-
-	assert.Equal(t, http.StatusUnauthorized, rr.Code)
-}
-
-func recordAndServe(req *http.Request, handler http.Handler) *httptest.ResponseRecorder {
-	rr := httptest.NewRecorder()
-	handler.ServeHTTP(rr, req)
-	return rr
-}
-
-func handler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-}
-
-func req(header ...string) (*http.Request, error) {
-	req, err := http.NewRequest("GET", "/", nil)
-	if err != nil {
-		return nil, err
-	}
-	if len(header) > 0 {
-		req.Header.Set(header[0], header[1])
-	}
-	return req, nil
+	// mismatched header value
+	r2, err := provider.withRequest("Authorization", "Not-FooBar123_%")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusUnauthorized, r2.Code)
 }

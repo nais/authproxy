@@ -2,16 +2,12 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
 
 	"authproxy/internal/config"
-	"authproxy/internal/proxy"
 	"authproxy/internal/server"
-	"github.com/go-chi/chi/v5"
-	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -36,25 +32,7 @@ func main() {
 	parseFlags()
 	setupLogger()
 
-	rp := proxy.New(cfg.UpstreamScheme, cfg.UpstreamHost)
-
-	r := chi.NewRouter()
-	logger := proxy.LogEntry()
-	r.Use(logger.Handler)
-	r.Use(chimiddleware.Recoverer)
-
-	auth, err := cfg.Auth()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	r.HandleFunc("/isalive", func(writer http.ResponseWriter, _ *http.Request) {
-		_, err = fmt.Fprintf(writer, "ok\n")
-		if err != nil {
-			log.Error(err)
-		}
-	})
-	r.Handle("/*", auth(rp.Handle()))
+	r := server.Router(cfg)
 
 	go func() {
 		err := handleMetrics(cfg.MetricsBindAddress)

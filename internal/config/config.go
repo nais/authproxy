@@ -29,23 +29,28 @@ func DefaultConfig() *Config {
 	}
 }
 
-func (c *Config) Auth() (auth.Provider, error) {
-	p := strings.ToLower(c.AuthProvider)
+func (c *Config) Auth() (auth.Handler, error) {
+	var p auth.Provider
 
-	switch p {
+	switch strings.ToLower(c.AuthProvider) {
 	case "iap":
 		if c.AuthAudience == "" {
 			return nil, errors.New("auth-audience must be set")
 		}
-		return auth.IAP(c.AuthAudience), nil
+		p = auth.IAP(c.AuthAudience)
 	case "key":
 		if c.AuthPreSharedKey == "" {
 			return nil, errors.New("auth-pre-shared-key must be set")
 		}
-		return auth.PreSharedKey(c.AuthTokenHeader, c.AuthPreSharedKey), nil
+		if c.AuthTokenHeader == "" {
+			return nil, errors.New("auth-token-header must be set")
+		}
+		p = auth.PreSharedKey(c.AuthTokenHeader, c.AuthPreSharedKey)
 	case "no-op":
-		return auth.NoOp(), nil
+		p = auth.NoOp()
 	default:
-		return nil, errors.New("unknown auth-provider:" + p)
+		return nil, errors.New("unknown auth-provider:" + strings.ToLower(c.AuthProvider))
 	}
+
+	return p.Handler()
 }

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -10,15 +11,34 @@ import (
 	"google.golang.org/api/idtoken"
 )
 
-type Provider func(h http.Handler) http.Handler
+type Handler func(h http.Handler) http.Handler
 
-func NoOp() Provider {
-	return func(h http.Handler) http.Handler {
-		return h
+type Provider interface {
+	Handler() (Handler, error)
+}
+
+var _ Provider = &GoogleIAP{}
+
+type GoogleIAP struct {
+	aud       string
+	validator *idtoken.Validator
+}
+
+func IAP(aud string) *GoogleIAP {
+	return &GoogleIAP{
+		aud: aud,
 	}
 }
 
-func IAP(aud string) Provider {
+func (p *GoogleIAP) Handler() (Handler, error) {
+	if p.validator == nil {
+		v, err := idtoken.NewValidator(context.Background())
+		if err != nil {
+			return nil, err
+		}
+		p.validator = v
+	}
+
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			jwt := r.Header.Get("X-Goog-IAP-JWT-Assertion")
@@ -29,8 +49,9 @@ func IAP(aud string) Provider {
 				return
 			}
 
-			payload, err := idtoken.Validate(r.Context(), jwt, aud)
+			payload, err := p.validator.Validate(r.Context(), jwt, p.aud) //idtoken.Validate(r.Context(), jwt, aud)
 			if err != nil {
+				fmt.Printf("%v\n", err)
 				log.Debugf("invalid JWT token: %v", err)
 				http.Error(w, "invalid token", http.StatusUnauthorized)
 				return
@@ -50,23 +71,56 @@ func IAP(aud string) Provider {
 
 			h.ServeHTTP(w, r)
 		})
+	}, nil
+}
+
+func (p *GoogleIAP) WithValidator(v *idtoken.Validator) *GoogleIAP {
+	p.validator = v
+	return p
+}
+
+var _ Provider = &PSK{}
+
+type PSK struct {
+	authHeader string
+	apiKey     string
+}
+
+func PreSharedKey(authHeader, apiKey string) *PSK {
+	return &PSK{
+		authHeader: authHeader,
+		apiKey:     apiKey,
 	}
 }
 
-func PreSharedKey(authHeader, apiKey string) Provider {
+func (p *PSK) Handler() (Handler, error) {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			header := r.Header.Get(authHeader)
+			header := r.Header.Get(p.authHeader)
 
 			token := strings.ReplaceAll(header, "Bearer ", "")
 			token = strings.TrimSpace(token)
-			if token != strings.TrimSpace(apiKey) {
-				log.Debugf("header '%s' has invalid key '%s'", authHeader, header)
+			if token != strings.TrimSpace(p.apiKey) {
+				log.Debugf("header '%s' has invalid key '%s'", p.authHeader, header)
 				http.Error(w, "invalid token", http.StatusUnauthorized)
 				return
 			}
 
 			handler.ServeHTTP(w, r)
 		})
-	}
+	}, nil
+}
+
+var _ Provider = &NoAuth{}
+
+type NoAuth struct{}
+
+func NoOp() *NoAuth {
+	return &NoAuth{}
+}
+
+func (n NoAuth) Handler() (Handler, error) {
+	return func(h http.Handler) http.Handler {
+		return h
+	}, nil
 }
