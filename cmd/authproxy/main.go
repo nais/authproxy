@@ -16,16 +16,15 @@ import (
 var cfg = config.DefaultConfig()
 
 func init() {
-	flag.StringVar(&cfg.BindAddress, "bind-address", cfg.BindAddress, "Bind address")
-	flag.StringVar(&cfg.MetricsBindAddress, "metrics-bind-address", cfg.MetricsBindAddress, "Metrics bind address")
-	flag.StringVar(&cfg.LogLevel, "log-level", cfg.LogLevel, "which log level to output")
-	flag.StringVar(&cfg.UpstreamHost, "upstream-host", cfg.UpstreamHost, "Upstream host")
-	flag.StringVar(&cfg.AuthProvider, "auth-provider", cfg.AuthProvider, "Auth provider")
-	flag.StringVar(&cfg.AuthIssuer, "auth-issuer", cfg.AuthIssuer, "Auth issuer")
-	flag.StringVar(&cfg.AuthAudience, "auth-audience", cfg.AuthAudience, "Auth audience")
-	flag.StringVar(&cfg.AuthTokenHeader, "auth-token-header", cfg.AuthTokenHeader, "Auth token header")
-	flag.StringVar(&cfg.AuthPreSharedKey, "auth-pre-shared-key", cfg.AuthPreSharedKey, "Auth pre shared key")
-	flag.StringVar(&cfg.UpstreamScheme, "upstream-scheme", cfg.UpstreamScheme, "Upstream scheme")
+	flag.StringVar(&cfg.BindAddress, "bind-address", cfg.BindAddress, "Bind address for the authproxy, default 127.0.0.1:8080")
+	flag.StringVar(&cfg.MetricsBindAddress, "metrics-bind-address", cfg.MetricsBindAddress, "Bind address for metrics only, default 127.0.0.1:8081")
+	flag.StringVar(&cfg.LogLevel, "log-level", cfg.LogLevel, "which log level to use, default 'info'")
+	flag.StringVar(&cfg.UpstreamHost, "upstream-host", cfg.UpstreamHost, "Upstream host, i.e. which host to proxy requests to")
+	flag.StringVar(&cfg.AuthProvider, "auth-provider", cfg.AuthProvider, "Auth provider, a string of either 'iap', 'key', or 'no-op'")
+	flag.StringVar(&cfg.AuthAudience, "auth-audience", cfg.AuthAudience, "Auth audience, the 'aud' claim to expect in the JWT, required for --auth-provider 'iap'")
+	flag.StringVar(&cfg.AuthTokenHeader, "auth-token-header", cfg.AuthTokenHeader, "Auth token header, which header to check for token, required for --auth-provider 'key'")
+	flag.StringVar(&cfg.AuthPreSharedKey, "auth-pre-shared-key", cfg.AuthPreSharedKey, "Auth pre shared key, the pre shared key to check against, required for --auth-provider 'key'")
+	flag.StringVar(&cfg.UpstreamScheme, "upstream-scheme", cfg.UpstreamScheme, "Upstream scheme, the scheme to use when proxying requests, i.e. http or https")
 }
 
 func main() {

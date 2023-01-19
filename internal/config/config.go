@@ -15,15 +15,14 @@ type Config struct {
 	UpstreamScheme     string `json:"upstream-scheme"`
 	AuthProvider       string `json:"auth-provider"`
 	AuthAudience       string `json:"auth-audience"`
-	AuthIssuer         string `json:"auth-issuer"`
 	AuthTokenHeader    string `json:"auth-token-header"`
 	AuthPreSharedKey   string `json:"auth-pre-shared-key"`
 }
 
 func DefaultConfig() *Config {
 	return &Config{
-		BindAddress:        ":8080",
-		MetricsBindAddress: ":8081",
+		BindAddress:        "127.0.0.1:8080",
+		MetricsBindAddress: "127.0.0.1:8081",
 		LogLevel:           "info",
 		UpstreamScheme:     "https",
 	}
