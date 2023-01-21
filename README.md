@@ -46,7 +46,7 @@ The following flags are available:
 
 ### Binary
 
-`make wonderwall` and `./bin/wonderwall`
+`make authproxy` and `./bin/authproxy`
 
 See [configuration](#configuration).
 
