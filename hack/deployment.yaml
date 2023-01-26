@@ -34,7 +34,7 @@ spec:
               value: "Authorization"
             - name: AUTH_PRE_SHARED_KEY
               value: "0123456789"
-          image: "europe-north1-docker.pkg.dev/nais-io/nais/images/authproxy:sha-155a58e"
+          image: "ghcr.io/nais/authproxy/authproxy:main"
           imagePullPolicy: "IfNotPresent"
           ports:
             - name: http

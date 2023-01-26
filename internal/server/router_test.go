@@ -1,8 +1,6 @@
 package server
 
 import (
-	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -57,10 +55,6 @@ func TestRouter(t *testing.T) {
 			r, err := req(s.URL, tt.headers...)
 			got, err := s.Client().Do(r)
 			assert.NoError(t, err)
-			b, err := io.ReadAll(got.Body)
-			assert.NoError(t, err)
-
-			fmt.Printf("got: %s\n", b)
 			assert.Equal(t, tt.statusCode, got.StatusCode)
 		})
 	}

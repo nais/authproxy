@@ -12,11 +12,14 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
+
+type TestProvider struct {
+	Handler
+}
 
 func testProvider(p Provider) (*TestProvider, error) {
 	h, err := p.Handler()
@@ -57,7 +60,13 @@ func handler() http.Handler {
 func httpClient(jwks jwk.Set) *http.Client {
 	return &http.Client{
 		Transport: RoundTripFn(func(req *http.Request) *http.Response {
-			b, err := json.Marshal(jwks)
+
+			publicKeys, err := jwk.PublicSetOf(jwks)
+			if err != nil {
+				panic(err)
+			}
+
+			b, err := json.Marshal(publicKeys)
 			if err != nil {
 				panic(err)
 			}
@@ -75,29 +84,17 @@ type RoundTripFn func(req *http.Request) *http.Response
 
 func (f RoundTripFn) RoundTrip(req *http.Request) (*http.Response, error) { return f(req), nil }
 
-func defaultIapToken(aud string) *Token {
-	return &Token{iapToken(time.Now().Add(-20*time.Second), 5*time.Minute, aud)}
+type Token struct {
+	jwt.Token
 }
 
-func iapToken(iat time.Time, exp time.Duration, aud string) *Token {
+func token(iat time.Time, exp time.Duration) *Token {
 	jwt.Settings(jwt.WithFlattenAudience(true))
-	sub := uuid.New().String()
 	expiry := iat.Add(exp)
-
 	accessToken := jwt.New()
-	accessToken.Set("sub", sub)
-	accessToken.Set("iss", "https://cloud.google.com/iap")
-	accessToken.Set("azp", "123")
-	accessToken.Set("aud", aud)
-	accessToken.Set("hd", "whatevs.com")
-	accessToken.Set("email", "user@nais.io")
 	accessToken.Set("iat", iat.Unix())
 	accessToken.Set("exp", expiry.Unix())
 	return &Token{accessToken}
-}
-
-type Token struct {
-	jwt.Token
 }
 
 func (t *Token) sign(set jwk.Set) (string, error) {
@@ -117,23 +114,12 @@ func (t *Token) sign(set jwk.Set) (string, error) {
 	return string(signedToken), nil
 }
 
-func (t *Token) with(key, value string) *Token {
+func (t *Token) with(key string, value any) *Token {
 	t.Set(key, value)
 	return t
 }
 
 func newJwkSet(kid string) (jwk.Set, error) {
-	key, err := newJwk(kid)
-	if err != nil {
-		return nil, err
-	}
-	privateKeys := jwk.NewSet()
-	privateKeys.AddKey(key)
-	return privateKeys, nil
-}
-
-func newJwk(kid string) (jwk.Key, error) {
-
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		panic(err)
@@ -147,5 +133,7 @@ func newJwk(kid string) (jwk.Key, error) {
 	key.Set(jwk.AlgorithmKey, jwa.ES256)
 	key.Set(jwk.KeyTypeKey, jwa.EC)
 	key.Set(jwk.KeyIDKey, kid)
-	return key, nil
+	privateKeys := jwk.NewSet()
+	privateKeys.AddKey(key)
+	return privateKeys, nil
 }
