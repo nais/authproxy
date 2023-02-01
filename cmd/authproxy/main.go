@@ -22,6 +22,8 @@ func init() {
 	flag.StringVar(&cfg.UpstreamHost, "upstream-host", cfg.UpstreamHost, "Upstream host, i.e. which host to proxy requests to")
 	flag.StringVar(&cfg.AuthProvider, "auth-provider", cfg.AuthProvider, "Auth provider, a string of either 'iap', 'key', or 'no-op'")
 	flag.StringVar(&cfg.AuthAudience, "auth-audience", cfg.AuthAudience, "Auth audience, the 'aud' claim to expect in the JWT, required for --auth-provider 'iap'")
+	flag.StringVar(&cfg.AuthJwksUrl, "auth-jwks-url", cfg.AuthJwksUrl, "The URL to fetch the JWKS from, required for --auth-provider 'jwt'")
+	flag.StringVar(&cfg.AuthRequiredClaims, "auth-required-claims", cfg.AuthRequiredClaims, "Comma separated list of required JWT claims as key/value pairs, i.e. 'key1=value1,key2=value2'. Used for auth-provider 'jwt'")
 	flag.StringVar(&cfg.AuthTokenHeader, "auth-token-header", cfg.AuthTokenHeader, "Auth token header, which header to check for token, required for --auth-provider 'key'")
 	flag.StringVar(&cfg.AuthPreSharedKey, "auth-pre-shared-key", cfg.AuthPreSharedKey, "Auth pre shared key, the pre shared key to check against, required for --auth-provider 'key'")
 	flag.StringVar(&cfg.UpstreamScheme, "upstream-scheme", cfg.UpstreamScheme, "Upstream scheme, the scheme to use when proxying requests, i.e. http or https")

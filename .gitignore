@@ -2,3 +2,4 @@
 .vs_code
 .env
 bin
+/cover.out

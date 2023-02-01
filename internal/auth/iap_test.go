@@ -108,6 +108,7 @@ func TestIAPUnauthorized(t *testing.T) {
 		})
 	}
 }
+
 func defaultIapToken(aud string) *Token {
 	return &Token{iapToken(time.Now().Add(-20*time.Second), 5*time.Minute, aud)}
 }
