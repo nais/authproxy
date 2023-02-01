@@ -13,7 +13,7 @@ You have a deployment in Kubernetes and want to expose a service to the internet
 
 * Authentication with pre shared key, e.g. an API key
 * Authentication with Google IAP JWT, e.g. the JWT produced by Google IAP
-* ~~Authentication with any OAuth2 JWT, e.g. an OAuth2 Bearer JWT~~ (TODO)
+* Authentication with any OAuth2 JWT, e.g. an OAuth2 Bearer JWT
 
 ## Configuration
 
@@ -31,6 +31,8 @@ The following flags are available:
   --auth-pre-shared-key string   Auth pre shared key, the pre shared key to check against, required for --auth-provider 'key'
   --auth-provider string         Auth provider, a string of either 'iap', 'key', or 'no-op'
   --auth-token-header string     Auth token header, which header to check for token, required for --auth-provider 'key'
+  --auth-jwks-url string         The URL to fetch the JWKS from, required for --auth-provider 'jwt'
+  --auth-required-claims string  Comma separated list of required JWT claims as key/value pairs, i.e. 'key1=value1,key2=value2'. Used for auth-provider 'jwt'
   --bind-address string          Bind address for the authproxy, default 127.0.0.1:8080 (default "127.0.0.1:8080")
   --log-level string             Which log level to use, default 'info' (default "info")
   --metrics-bind-address string  Bind address for metrics only, default 127.0.0.1:8081 (default "127.0.0.1:8081")
