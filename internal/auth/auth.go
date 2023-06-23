@@ -3,8 +3,6 @@ package auth
 import (
 	"net/http"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type Handler func(h http.Handler) http.Handler
@@ -35,7 +33,6 @@ func (p *PSK) Handler() (Handler, error) {
 			token := strings.ReplaceAll(header, "Bearer ", "")
 			token = strings.TrimSpace(token)
 			if token != strings.TrimSpace(p.apiKey) {
-				log.Debugf("header '%s' has invalid key '%s'", p.authHeader, header)
 				http.Error(w, "invalid token", http.StatusUnauthorized)
 				return
 			}
