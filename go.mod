@@ -3,7 +3,7 @@ module authproxy
 go 1.19
 
 require (
-	github.com/go-chi/chi/v5 v5.0.8
+	github.com/go-chi/chi/v5 v5.0.11
 	github.com/google/uuid v1.3.0
 	github.com/joho/godotenv v1.4.0
 	github.com/lestrrat-go/jwx/v2 v2.0.11
