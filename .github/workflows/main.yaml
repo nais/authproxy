@@ -5,6 +5,8 @@ on:
       - main
     paths-ignore:
       - "README.md"
+      - ".github/workflows/pr.yaml"
+      - ".github/workflows/pr-dependabot.yaml"
 
 env:
   REGISTRY: europe-north1-docker.pkg.dev/nais-io/nais/images

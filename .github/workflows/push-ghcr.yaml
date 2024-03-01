@@ -5,7 +5,8 @@ on:
       - main
     paths-ignore:
       - "README.md"
-
+      - ".github/workflows/pr.yaml"
+      - ".github/workflows/pr-dependabot.yaml"
 env:
   REGISTRY: ghcr.io/${{ github.repository }}
 jobs:
