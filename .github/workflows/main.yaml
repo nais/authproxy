@@ -27,6 +27,7 @@ jobs:
     needs: [tests]
     permissions:
       id-token: "write"
+      packages: "write"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
