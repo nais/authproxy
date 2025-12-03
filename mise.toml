@@ -25,4 +25,4 @@ description = "Upgrade all github actions to latest"
 run = "go tool github.com/sethvargo/ratchet upgrade .github/workflows/*.yaml"
 
 [tasks.build]
-run = "go build -o bin/authproxy cmd/authproxy/*.go"
+run = "go build -o bin/authproxy cmd/authproxy/main.go"
