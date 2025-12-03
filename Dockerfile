@@ -1,6 +1,5 @@
 FROM golang:1.25 AS builder
 ENV GOTOOLCHAIN=auto
-ENV GOOS=linux
 ENV CGO_ENABLED=0
 
 COPY . /src
