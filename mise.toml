@@ -13,7 +13,8 @@ depends = ["fmt"]
 run = [
     "go vet ./...",
     "go tool staticcheck ./...",
-    "go tool govulncheck -show=traces ./..."
+    "go tool govulncheck -show=traces ./...",
+    "go tool ratchet lint .github/workflows/*.yaml"
 ]
 
 [tasks.actions-update]
