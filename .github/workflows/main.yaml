@@ -43,7 +43,6 @@ jobs:
           name: authproxy
           dockerfile: Dockerfile
           google_service_account: gh-authproxy
-          multi-platform: true
           push: true
           push_ghcr: true
           workload_identity_provider: ${{ secrets.NAIS_IO_WORKLOAD_IDENTITY_PROVIDER }}
