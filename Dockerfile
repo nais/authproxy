@@ -1,15 +1,17 @@
-FROM golang:1.25.4-alpine as builder
-RUN apk add --no-cache git make curl
+FROM golang:1.25 AS builder
+ENV GOTOOLCHAIN=auto
 ENV GOOS=linux
 ENV CGO_ENABLED=0
-ENV GO111MODULE=on
+
 COPY . /src
 WORKDIR /src
-RUN make test
-RUN make alpine
+RUN go test -count=1 ./... -coverprofile cover.out
 
-FROM alpine:3
-RUN export PATH=$PATH:/app
+ARG TARGETOS
+ARG TARGETARCH
+RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -o bin/authproxy cmd/authproxy/main.go
+
+FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
 COPY --from=builder /src/bin/authproxy /app/authproxy
 ENTRYPOINT ["/app/authproxy"]
