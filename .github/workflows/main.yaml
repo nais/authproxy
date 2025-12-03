@@ -6,7 +6,7 @@ on:
     paths-ignore:
       - "README.md"
       - ".github/workflows/pr.yaml"
-      - "dependabot-auto-merge.yaml"
+      - ".github/workflows/dependabot-auto-merge.yaml"
 permissions:
   contents: read
 env:
