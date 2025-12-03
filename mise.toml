@@ -1,0 +1,28 @@
+[tools]
+go = "1.25.5"
+
+[tasks.fmt]
+run = "go tool gofumpt -w ./"
+
+[tasks.test]
+depends = ["fmt"]
+run = "go test -count=1 -shuffle=on ./... -coverprofile cover.out"
+
+[tasks.check]
+depends = ["fmt"]
+run = [
+    "go vet ./...",
+    "go tool staticcheck ./...",
+    "go tool govulncheck -show=traces ./..."
+]
+
+[tasks.actions-update]
+description = "Upgrade all github actions to latest version satisfying their version tag"
+run = "go tool github.com/sethvargo/ratchet update .github/workflows/*.yaml"
+
+[tasks.actions-upgrade]
+description = "Upgrade all github actions to latest"
+run = "go tool github.com/sethvargo/ratchet upgrade .github/workflows/*.yaml"
+
+[tasks.build]
+run = "go build -o bin/authproxy cmd/authproxy/*.go"
