@@ -60,7 +60,6 @@ func handler() http.Handler {
 func httpClient(jwks jwk.Set) *http.Client {
 	return &http.Client{
 		Transport: RoundTripFn(func(req *http.Request) *http.Response {
-
 			publicKeys, err := jwk.PublicSetOf(jwks)
 			if err != nil {
 				panic(err)

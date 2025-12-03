@@ -19,6 +19,7 @@ func TestJWTAuthorized(t *testing.T) {
 		"iss": "http://localhost:1234",
 		"aud": "yolo",
 	})
+	assert.NoError(t, err)
 	jwtProvider = jwtProvider.WithJWKSCache(cache)
 
 	provider, err := testProvider(jwtProvider)
@@ -26,13 +27,13 @@ func TestJWTAuthorized(t *testing.T) {
 
 	now := time.Now()
 	t1, err := token(now, 60*time.Minute).with("iss", "http://localhost:1234").with("aud", "yolo").sign(jwks)
+	assert.NoError(t, err)
 	r1, err := provider.withRequest("Authorization", "Bearer "+t1)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, r1.Code)
 }
 
 func TestJWTUnauthorized(t *testing.T) {
-
 	url := "http://localhost:1234"
 	cache, jwks := jwksCache(url)
 
@@ -40,6 +41,7 @@ func TestJWTUnauthorized(t *testing.T) {
 		"iss": "theissuer",
 		"aud": "audience",
 	})
+	assert.NoError(t, err)
 	jwtProvider = jwtProvider.WithJWKSCache(cache)
 
 	provider, err := testProvider(jwtProvider)

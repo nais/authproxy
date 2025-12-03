@@ -22,13 +22,13 @@ func TestIAPAuthorized(t *testing.T) {
 	assert.NoError(t, err)
 
 	t1, err := defaultIapToken("google_iap_audience").sign(jwks)
+	assert.NoError(t, err)
 	r1, err := provider.withRequest("X-Goog-IAP-JWT-Assertion", t1)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, r1.Code)
 }
 
 func TestIAPUnauthorized(t *testing.T) {
-
 	validAudience := "google_iap_audience"
 	jwks, err := newJwkSet("1234")
 	assert.NoError(t, err)

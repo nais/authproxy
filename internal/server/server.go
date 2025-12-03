@@ -13,7 +13,6 @@ import (
 )
 
 func Start(bindAddress string, r chi.Router) error {
-
 	log.Infof("Starting server on %s", bindAddress)
 
 	server := http.Server{

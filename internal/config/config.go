@@ -56,6 +56,9 @@ func (c *Config) Auth() (auth.Provider, error) {
 			return nil, fmt.Errorf("auth-required-claims invalid format: %w", err)
 		}
 		p, err = auth.JWT(c.AuthTokenHeader, c.AuthJwksUrl, claims)
+		if err != nil {
+			return nil, fmt.Errorf("creating JWT auth provider: %w", err)
+		}
 	case "key":
 		if c.AuthPreSharedKey == "" {
 			return nil, errors.New("auth-pre-shared-key must be set")

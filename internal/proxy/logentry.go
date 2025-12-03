@@ -105,9 +105,9 @@ func (l *requestLoggerEntry) Write(status, bytes int, _ http.Header, elapsed tim
 
 	switch {
 	case status >= 400:
-		entry.Infof(msg)
+		entry.Info(msg)
 	default:
-		entry.Debugf(msg)
+		entry.Debug(msg)
 	}
 }
 
