@@ -25,7 +25,6 @@ type JWTAuth struct {
 var _ Provider = &JWTAuth{}
 
 func JWT(authHeader, jwksURL string, requiredClaims map[string]any) (*JWTAuth, error) {
-
 	return &JWTAuth{
 		jwksURL:        jwksURL,
 		AuthHeader:     authHeader,
@@ -71,7 +70,6 @@ func (p *JWTAuth) WithJWKSCache(cache *jwk.Cache) *JWTAuth {
 }
 
 func (p *JWTAuth) validate(ctx context.Context, token string) error {
-
 	opts := []jwt.ValidateOption{
 		jwt.WithAcceptableSkew(AcceptableClockSkew),
 	}

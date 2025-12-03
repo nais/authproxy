@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"authproxy/internal/config"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRouter(t *testing.T) {
-
 	cfg := config.DefaultConfig()
 	cfg.AuthProvider = "key"
 	cfg.AuthPreSharedKey = "test"
@@ -53,12 +53,12 @@ func TestRouter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r, err := req(s.URL, tt.headers...)
+			assert.NoError(t, err)
 			got, err := s.Client().Do(r)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.statusCode, got.StatusCode)
 		})
 	}
-
 }
 
 func req(url string, header ...string) (*http.Request, error) {

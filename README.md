@@ -44,11 +44,12 @@ The following flags are available:
 
 ### Requirements
 
-- Go 1.19
+- Go 1.25
+- Mise
 
 ### Binary
 
-`make authproxy` and `./bin/authproxy`
+`mise run build` and `./bin/authproxy`
 
 See [configuration](#configuration).
 
