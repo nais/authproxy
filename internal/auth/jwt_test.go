@@ -15,10 +15,10 @@ func TestJWTAuthorized(t *testing.T) {
 	url := "http://localhost:1234"
 	cache, jwks := jwksCache(url)
 
-	jwtProvider, err := JWT("Authorization", url, map[string]any{
+	jwtProvider, err := JWT(url, RequiredClaims(map[string]any{
 		"iss": "http://localhost:1234",
 		"aud": "yolo",
-	})
+	}))
 	assert.NoError(t, err)
 	jwtProvider = jwtProvider.WithJWKSCache(cache)
 
@@ -37,10 +37,10 @@ func TestJWTUnauthorized(t *testing.T) {
 	url := "http://localhost:1234"
 	cache, jwks := jwksCache(url)
 
-	jwtProvider, err := JWT("Authorization", url, map[string]any{
+	jwtProvider, err := JWT(url, RequiredClaims(map[string]any{
 		"iss": "theissuer",
 		"aud": "audience",
-	})
+	}))
 	assert.NoError(t, err)
 	jwtProvider = jwtProvider.WithJWKSCache(cache)
 

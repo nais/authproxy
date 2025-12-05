@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -20,6 +21,7 @@ func TestRouter(t *testing.T) {
 	cfg.LogLevel = "debug"
 
 	proxyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("headers: %v\n", r.Header)
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer proxyServer.Close()

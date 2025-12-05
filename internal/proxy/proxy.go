@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"strings"
+
+	"authproxy/internal/auth"
 )
 
 type ReverseProxy struct {
@@ -23,11 +25,10 @@ func New(scheme, upstreamHost string) *ReverseProxy {
 			r.URL.Scheme = strings.ToLower(scheme)
 			r.Host = upstreamHost
 
-			// TODO: get token from context and pass through if we need this functionality
-			//accessToken, ok := mv.AccessTokenFrom(r.Context())
-			/*if ok {
+			accessToken, ok := r.Context().Value(auth.CtxAccessToken).(string)
+			if ok {
 				r.Header.Set("authorization", "Bearer "+accessToken)
-			}*/
+			}
 		},
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
 			logger := LogEntryFrom(r)

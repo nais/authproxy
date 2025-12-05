@@ -33,7 +33,6 @@ func DefaultConfig() *Config {
 
 func (c *Config) Auth() (auth.Provider, error) {
 	var p auth.Provider
-	var err error
 
 	switch strings.ToLower(c.AuthProvider) {
 	case "iap":
@@ -45,17 +44,14 @@ func (c *Config) Auth() (auth.Provider, error) {
 		if c.AuthJwksUrl == "" {
 			return nil, errors.New("auth-jwks-url must be set")
 		}
-		if c.AuthTokenHeader == "" {
-			c.AuthTokenHeader = "Authorization"
-		}
 		if c.AuthRequiredClaims == "" {
 			return nil, errors.New("auth-required-claims must be set")
 		}
 		claims, err := toClaimMap(c.AuthRequiredClaims)
 		if err != nil {
-			return nil, fmt.Errorf("auth-required-claims invalid format: %w", err)
+			return nil, fmt.Errorf("invalid auth-required-claims: %w", err)
 		}
-		p, err = auth.JWT(c.AuthTokenHeader, c.AuthJwksUrl, claims)
+		p, err = auth.JWT(c.AuthJwksUrl, auth.AuthHeader(c.AuthTokenHeader), auth.RequiredClaims(claims))
 		if err != nil {
 			return nil, fmt.Errorf("creating JWT auth provider: %w", err)
 		}
@@ -73,15 +69,14 @@ func (c *Config) Auth() (auth.Provider, error) {
 		return nil, errors.New("unknown auth-provider:" + strings.ToLower(c.AuthProvider))
 	}
 
-	if err != nil {
-		return nil, err
-	}
 	return p, nil
 }
 
 func toClaimMap(s string) (map[string]any, error) {
 	m := make(map[string]any)
-
+	if s == "" {
+		return m, nil
+	}
 	pairs := strings.Split(s, ",")
 	if len(pairs) == 0 {
 		return nil, errors.New("must be a comma separated list: " + s)

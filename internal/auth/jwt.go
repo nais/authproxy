@@ -14,22 +14,59 @@ import (
 )
 
 const AcceptableClockSkew = 5 * time.Second
+const CtxAccessToken = "AccessToken"
 
 type JWTAuth struct {
-	AuthHeader     string
-	RequiredClaims map[string]any
-	jwksURL        string
-	jwksCache      *jwk.Cache
+	authHeader         string
+	requiredClaims     map[string]any
+	forwardBearerToken bool
+	jwksURL            string
+	jwksCache          *jwk.Cache
 }
 
 var _ Provider = &JWTAuth{}
 
-func JWT(authHeader, jwksURL string, requiredClaims map[string]any) (*JWTAuth, error) {
-	return &JWTAuth{
-		jwksURL:        jwksURL,
-		AuthHeader:     authHeader,
-		RequiredClaims: requiredClaims,
-	}, nil
+type Option func(*JWTAuth)
+
+func JWT(jwksURL string, options ...Option) (*JWTAuth, error) {
+	auth := &JWTAuth{
+		jwksURL: jwksURL,
+	}
+	for _, opt := range options {
+		opt(auth)
+	}
+
+	if auth.authHeader == "" {
+		auth.authHeader = "Authorization"
+	}
+
+	if auth.requiredClaims == nil {
+		auth.requiredClaims = make(map[string]any)
+	}
+
+	return auth, nil
+}
+
+func AuthHeader(header string) Option {
+	return func(p *JWTAuth) {
+		p.authHeader = header
+	}
+}
+
+func ForwardBearerToken() Option {
+	return func(p *JWTAuth) {
+		p.forwardBearerToken = true
+	}
+}
+
+func RequiredClaims(requiredClaims map[string]any) Option {
+	return func(p *JWTAuth) {
+		p.requiredClaims = requiredClaims
+	}
+}
+
+func withAccessToken(ctx context.Context, accessToken string) context.Context {
+	return context.WithValue(ctx, CtxAccessToken, accessToken)
 }
 
 func (p *JWTAuth) Handler() (Handler, error) {
@@ -43,14 +80,12 @@ func (p *JWTAuth) Handler() (Handler, error) {
 
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			header := r.Header.Get(p.AuthHeader)
-
+			header := r.Header.Get(p.authHeader)
 			token := strings.ReplaceAll(header, "Bearer ", "")
 			token = strings.TrimSpace(token)
 
 			if token == "" {
-				log.Debugf("no JWT token found in request")
-				http.Error(w, fmt.Sprintf("missing token from header %s", p.AuthHeader), http.StatusUnauthorized)
+				http.Error(w, fmt.Sprintf("missing token from header %s", p.authHeader), http.StatusUnauthorized)
 				return
 			}
 			if err := p.validate(r.Context(), token); err != nil {
@@ -58,8 +93,11 @@ func (p *JWTAuth) Handler() (Handler, error) {
 				http.Error(w, "invalid token", http.StatusUnauthorized)
 				return
 			}
-
-			handler.ServeHTTP(w, r)
+			ctx := r.Context()
+			if p.forwardBearerToken {
+				ctx = withAccessToken(ctx, token)
+			}
+			handler.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}, nil
 }
@@ -73,7 +111,7 @@ func (p *JWTAuth) validate(ctx context.Context, token string) error {
 	opts := []jwt.ValidateOption{
 		jwt.WithAcceptableSkew(AcceptableClockSkew),
 	}
-	for k, v := range p.RequiredClaims {
+	for k, v := range p.requiredClaims {
 		switch k {
 		case "iss":
 			opts = append(opts, jwt.WithIssuer(v.(string)))
