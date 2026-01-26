@@ -17,7 +17,7 @@ require (
 	github.com/prometheus/client_golang v1.23.2
 	github.com/sirupsen/logrus v1.9.4
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/api v0.259.0
+	google.golang.org/api v0.260.0
 )
 
 require (
@@ -43,7 +43,7 @@ require (
 	github.com/google/go-github/v73 v73.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.3.7 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.3.9 // indirect
 	github.com/googleapis/gax-go/v2 v2.16.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.3 // indirect
