@@ -111,7 +111,7 @@ func (l *requestLoggerEntry) Write(status, bytes int, _ http.Header, elapsed tim
 	}
 }
 
-func (l *requestLoggerEntry) Panic(v interface{}, _ []byte) {
+func (l *requestLoggerEntry) Panic(v any, _ []byte) {
 	stacktrace := "#"
 
 	fields := log.Fields{
