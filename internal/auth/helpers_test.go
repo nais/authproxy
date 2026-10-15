@@ -12,9 +12,9 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"github.com/lestrrat-go/jwx/v2/jwa"
-	"github.com/lestrrat-go/jwx/v2/jwk"
-	"github.com/lestrrat-go/jwx/v2/jwt"
+	"github.com/lestrrat-go/jwx/v4/jwa"
+	"github.com/lestrrat-go/jwx/v4/jwk"
+	"github.com/lestrrat-go/jwx/v4/jwt"
 )
 
 type TestProvider struct {
@@ -74,6 +74,7 @@ func httpClient(jwks jwk.Set) *http.Client {
 				StatusCode: 200,
 				Body:       io.NopCloser(bytes.NewReader(b)),
 				Header:     make(http.Header),
+				Request:    req,
 			}
 		}),
 	}
@@ -106,7 +107,7 @@ func (t *Token) sign(set jwk.Set) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	signedToken, err := jwt.Sign(tok, jwt.WithKey(jwa.ES256, signer))
+	signedToken, err := jwt.Sign(tok, jwt.WithKey(jwa.ES256(), signer))
 	if err != nil {
 		return "", err
 	}
@@ -124,13 +125,13 @@ func newJwkSet(kid string) (jwk.Set, error) {
 		panic(err)
 	}
 
-	key, err := jwk.FromRaw(privateKey)
+	key, err := jwk.Import[jwk.Key](privateKey)
 	if err != nil {
 		return nil, err
 	}
 
-	key.Set(jwk.AlgorithmKey, jwa.ES256)
-	key.Set(jwk.KeyTypeKey, jwa.EC)
+	key.Set(jwk.AlgorithmKey, jwa.ES256())
+	key.Set(jwk.KeyTypeKey, jwa.EC())
 	key.Set(jwk.KeyIDKey, kid)
 	privateKeys := jwk.NewSet()
 	privateKeys.AddKey(key)

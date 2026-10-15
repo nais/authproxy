@@ -7,9 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lestrrat-go/jwx/v2/jwk"
-	"github.com/lestrrat-go/jwx/v2/jws"
-	"github.com/lestrrat-go/jwx/v2/jwt"
+	"github.com/jwx-go/jwkfetch/v4"
+	"github.com/lestrrat-go/httprc/v3"
+	"github.com/lestrrat-go/jwx/v4/jwk"
+	"github.com/lestrrat-go/jwx/v4/jws"
+	"github.com/lestrrat-go/jwx/v4/jwt"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -19,7 +21,7 @@ type JWTAuth struct {
 	AuthHeader     string
 	RequiredClaims map[string]any
 	jwksURL        string
-	jwksCache      *jwk.Cache
+	jwksCache      *jwkfetch.Cache
 }
 
 var _ Provider = &JWTAuth{}
@@ -64,7 +66,7 @@ func (p *JWTAuth) Handler() (Handler, error) {
 	}, nil
 }
 
-func (p *JWTAuth) WithJWKSCache(cache *jwk.Cache) *JWTAuth {
+func (p *JWTAuth) WithJWKSCache(cache *jwkfetch.Cache) *JWTAuth {
 	p.jwksCache = cache
 	return p
 }
@@ -97,7 +99,7 @@ func (p *JWTAuth) parseToken(ctx context.Context, raw string) (jwt.Token, error)
 		return nil, err
 	}
 	parseOpts := []jwt.ParseOption{
-		jwt.WithKeySet(*jwks,
+		jwt.WithKeySet(jwks,
 			jws.WithInferAlgorithmFromKey(true),
 		),
 		jwt.WithAcceptableSkew(AcceptableClockSkew),
@@ -105,20 +107,25 @@ func (p *JWTAuth) parseToken(ctx context.Context, raw string) (jwt.Token, error)
 	return jwt.ParseString(raw, parseOpts...)
 }
 
-func (p *JWTAuth) getJWKS(ctx context.Context) (*jwk.Set, error) {
-	set, err := p.jwksCache.Get(ctx, p.jwksURL)
+func (p *JWTAuth) getJWKS(ctx context.Context) (jwk.Set, error) {
+	set, err := p.jwksCache.Lookup(ctx, p.jwksURL)
 	if err != nil {
 		return nil, fmt.Errorf("provider: fetching jwks: %w", err)
 	}
 
-	return &set, nil
+	return set, nil
 }
 
-func (p *JWTAuth) cache() (*jwk.Cache, error) {
+func (p *JWTAuth) cache() (*jwkfetch.Cache, error) {
 	ctx := context.Background()
-	cache := jwk.NewCache(ctx)
+	cache, err := jwkfetch.NewCache(ctx, httprc.NewClient(),
+		jwkfetch.WithHTTPClient(jwkfetch.WrapHTTPClientDefaults(&http.Client{})),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("creating jwks cache: %w", err)
+	}
 
-	err := cache.Register(p.jwksURL)
+	err = cache.Register(ctx, p.jwksURL, jwkfetch.WithWaitReady(false))
 	if err != nil {
 		return nil, fmt.Errorf("registering jwks provider uri to cache: %w", err)
 	}

@@ -7,7 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lestrrat-go/jwx/v2/jwk"
+	"github.com/jwx-go/jwkfetch/v4"
+	"github.com/lestrrat-go/httprc/v3"
+	"github.com/lestrrat-go/jwx/v4/jwk"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -118,15 +120,18 @@ func TestJWTUnauthorized(t *testing.T) {
 	}
 }
 
-func jwksCache(url string) (*jwk.Cache, jwk.Set) {
+func jwksCache(url string) (*jwkfetch.Cache, jwk.Set) {
 	ctx := context.Background()
 	jwks, err := newJwkSet("1234")
 	if err != nil {
 		panic(err)
 	}
-	cache := jwk.NewCache(ctx)
+	cache, err := jwkfetch.NewCache(ctx, httprc.NewClient(), jwkfetch.WithHTTPClient(httpClient(jwks)))
+	if err != nil {
+		panic(fmt.Errorf("creating jwks cache: %w", err))
+	}
 
-	err = cache.Register(url, jwk.WithHTTPClient(httpClient(jwks)))
+	err = cache.Register(ctx, url, jwkfetch.WithWaitReady(false))
 	if err != nil {
 		panic(fmt.Errorf("registering jwks provider uri to cache: %w", err))
 	}
